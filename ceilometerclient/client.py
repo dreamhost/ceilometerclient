@@ -23,9 +23,17 @@ class Client(object):
         r = requests.get(self._mk_url('/projects'))
         return r.json.get('projects', [])
 
-    def get_resources(self, project_id):
+    def get_resources(self, project_id, start_timestamp=None,
+                      end_timestamp=None):
         """Returns details about the named project."""
-        r = requests.get(self._mk_url('/projects/%s/resources' % project_id))
+        args = {}
+        if start_timestamp:
+            args['start_timestamp'] = start_timestamp.isoformat()
+        if end_timestamp:
+            args['end_timestamp'] = end_timestamp.isoformat()
+
+        r = requests.get(self._mk_url('/projects/%s/resources' % project_id),
+                         params=args)
         if r.status_code == requests.codes.not_found:
             raise ValueError('Unknown project %r' % project_id)
         return r.json.get('resources', [])
