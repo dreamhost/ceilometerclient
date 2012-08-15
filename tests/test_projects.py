@@ -2,7 +2,6 @@
 import unittest
 
 import mock
-from nose import tools
 
 import requests
 
@@ -21,21 +20,4 @@ class ProjectTests(unittest.TestCase):
             getter.return_value = self.response
             prjs = self.c.get_projects()
         self.assertEquals(prjs, ['project1', 'project2'])
-
-
-    def test_get_project(self):
-        self.response.json = {'project': {'id': 'project-id'}}
-        with mock.patch('requests.get') as getter:
-            getter.return_value = self.response
-            prj = self.c.get_project('project-id')
-        self.assertEquals(prj, {'id': 'project-id'})
-
-
-    def test_get_project_not_found(self):
-        self.response.status_code = requests.codes.not_found
-        with mock.patch('requests.get') as getter:
-            getter.return_value = self.response
-            self.assertRaisesRegexp(ValueError, 'project-id',
-                                    self.c.get_project, 'project-id',
-                                    )
 

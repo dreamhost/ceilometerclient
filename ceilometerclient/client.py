@@ -23,9 +23,9 @@ class Client(object):
         r = requests.get(self._mk_url('/projects'))
         return r.json.get('projects', [])
 
-    def get_project(self, project_id):
+    def get_resources(self, project_id):
         """Returns details about the named project."""
-        r = requests.get(self._mk_url('/project/' + project_id))
+        r = requests.get(self._mk_url('/projects/%s/resources' % project_id))
         if r.status_code == requests.codes.not_found:
             raise ValueError('Unknown project %r' % project_id)
-        return r.json.get('project', {})
+        return r.json.get('resources', [])
