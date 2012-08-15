@@ -18,11 +18,14 @@ class Client(object):
                          path.lstrip('/'),
                          ])
 
-    def _get(self, path, **kwds):
-        r = requests.get(self._mk_url(path), params=kwds)
-        return r.json
-
     def get_projects(self):
         """Returns list of project ids known to the server."""
-        return self._get('/projects').get('projects', [])
+        r = requests.get(self._mk_url('/projects'))
+        return r.json.get('projects', [])
 
+    def get_project(self, project_id):
+        """Returns details about the named project."""
+        r = requests.get(self._mk_url('/project/' + project_id))
+        if r.status_code == requests.codes.not_found:
+            raise ValueError('Unknown project %r' % project_id)
+        return r.json.get('project', {})
