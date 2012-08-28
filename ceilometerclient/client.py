@@ -37,3 +37,18 @@ class Client(object):
         if r.status_code == requests.codes.not_found:
             raise ValueError('Unknown project %r' % project_id)
         return r.json.get('resources', [])
+
+    def get_events(self, resource_id, meter, start_timestamp=None,
+                      end_timestamp=None):
+        """Returns events about the resource in the time range."""
+        args = {}
+        if start_timestamp:
+            args['start_timestamp'] = start_timestamp.isoformat()
+        if end_timestamp:
+            args['end_timestamp'] = end_timestamp.isoformat()
+
+        r = requests.get(self._mk_url('/resources/%s/meters/%s' % (resource_id, meter)),
+                         params=args)
+        if r.status_code == requests.codes.not_found:
+            raise ValueError('Unknown resource %r' % resource_id)
+        return r.json.get('events', [])
