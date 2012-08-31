@@ -1,6 +1,8 @@
 """Client wrapper
 """
 
+import copy
+
 import requests
 
 
@@ -52,3 +54,24 @@ class Client(object):
         if r.status_code == requests.codes.not_found:
             raise ValueError('Unknown resource %r' % resource_id)
         return r.json.get('events', [])
+
+    def get_resource_duration_info(self, resource_id, meter,
+            start_timestamp=None, end_timestamp=None,
+            search_offset=0,
+            ):
+        """Returns duration, min, and max timestamp of the resource
+        for the given meter within the time range.
+        """
+        args = {'search_offset': search_offset,
+                }
+        if start_timestamp:
+            args['start_timestamp'] = start_timestamp.isoformat()
+        if end_timestamp:
+            args['end_timestamp'] = end_timestamp.isoformat()
+
+        r = requests.get(self._mk_url('/resources/%s/meters/%s/duration' % (resource_id, meter)),
+                         params=args)
+        if r.status_code == requests.codes.not_found:
+            raise ValueError('Unknown resource %r' % resource_id)
+        return copy.copy(r.json)
+
