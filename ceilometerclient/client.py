@@ -75,3 +75,22 @@ class Client(object):
             raise ValueError('Unknown resource %r' % resource_id)
         return copy.copy(r.json)
 
+    def get_resource_volume_max(self, resource_id, meter,
+            start_timestamp=None, end_timestamp=None,
+            search_offset=0,
+            ):
+        """Returns the max volume for the specified meter for a resource
+        within the time range.
+        """
+        args = {'search_offset': search_offset,
+                }
+        if start_timestamp:
+            args['start_timestamp'] = start_timestamp.isoformat()
+        if end_timestamp:
+            args['end_timestamp'] = end_timestamp.isoformat()
+
+        r = requests.get(self._mk_url('/resources/%s/meters/%s/volume/max' %
+                                      (resource_id, meter)
+                                      ),
+                         params=args)
+        return r.json.get('volume')
