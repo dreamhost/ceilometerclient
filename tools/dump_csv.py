@@ -9,8 +9,8 @@ import ceilometerclient
 
 
 RESOURCE_FIELDS = ['project_id', 'resource_id', 'name', 'display_name',
-                   'type', 'instance_flavor', 'first_seen', 'last_seen',
-                   'duration', 'size']
+                   'type', 'instance_flavor', 'network_id', 'cidr', 'mac',
+                   'ips', 'first_seen', 'last_seen', 'duration', 'size']
 
 def dump_resources(ceilometer, dumper):
     for project_id in ceilometer.get_projects():
@@ -26,6 +26,12 @@ def dump_resources(ceilometer, dumper):
                 type_ = None
                 flavor = None
                 size = metadata.get('size')
+
+                network_id = None  # subnets and ports
+                cidr = None        # subnets (only)
+                mac = None         # ports (only)
+                ips = None         # ports (only)
+
                 if meter.startswith('instance:'):
                     type_ = 'instance'
                     flavor = meter.partition(':')[-1]
@@ -37,6 +43,19 @@ def dump_resources(ceilometer, dumper):
                         )
                 elif meter == 'image_size':
                     type_ = 'image'
+                elif meter == 'network':
+                    type_ = 'network'
+                elif meter == 'subnet':
+                    type_ = 'subnet'
+                    network_id = metadata.get('network_id')
+                    cidr = metadata.get('cidr')
+                elif meter == 'port':
+                    type_ = 'port'
+                    network_id = metadata.get('network_id')
+                    mac = metadata.get('mac_address')
+                    ips = ','.join([item['ip_address']
+                                    for item in metadata.get('fixed_ips', [])
+                                    if 'ip_address' in item])
 
                 if type_ is not None:
                     duration_info = ceilometer.get_resource_duration_info(
@@ -51,6 +70,10 @@ def dump_resources(ceilometer, dumper):
                         display_name=metadata.get('display_name'),
                         type=type_,
                         instance_flavor=flavor,
+                        network_id=network_id,
+                        cidr=cidr,
+                        mac=mac,
+                        ips=ips,
                         first_seen=duration_info.get('start_timestamp'),
                         last_seen=duration_info.get('end_timestamp'),
                         duration=duration_info.get('duration'),
