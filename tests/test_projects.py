@@ -11,7 +11,15 @@ from ceilometerclient import client
 class ProjectTests(unittest.TestCase):
 
     def setUp(self):
-        self.c = client.Client('http://localhost:9000')
+        ksclient = mock.Mock()
+        ksclient.auth_token = "abc*token*abc"
+        ksclient.service_catalog = mock.Mock()
+        ksclient.service_catalog.get_endpoints = mock.Mock(
+            return_value={u'metering':
+                          [{u'adminURL': u'http://localhost:9000/',
+                            u'region': u'RegionOne',
+                            u'id': u'8e88da8f3ca54ed8a1c4b56ccb39d2b6'}]})
+        self.c = client.Client(ksclient)
         self.response = mock.Mock()
 
     def test_get_projects(self):

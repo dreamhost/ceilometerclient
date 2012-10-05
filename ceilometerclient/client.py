@@ -10,19 +10,35 @@ class Client(object):
     """Ceilometer client.
     """
 
-    def __init__(self, base_url):
-        self.base_url = base_url.rstrip('/')
+    def __init__(self, ksclient,
+                 service_type="metering",
+                 endpoint_type="adminURL"):
+        self.ksclient = ksclient
+        base_url = ksclient.service_catalog.get_endpoints(
+            service_type=service_type,
+            endpoint_type=endpoint_type)
+        self.base_url = base_url[service_type][0][endpoint_type].rstrip("/")
         self.version = 'v1'
 
-    def _mk_url(self, path):
-        return '/'.join([self.base_url,
-                         self.version,
-                         path.lstrip('/'),
-                         ])
+    def get(self, url, **kwargs):
+        """Emit a get request with the Keystone authentication token set in
+        headers.
+
+        """
+        if 'headers' in kwargs:
+            kwargs['headers']['X-Auth-Token'] = self.ksclient.auth_token
+        else:
+            kwargs['headers'] = {'X-Auth-Token': self.ksclient.auth_token}
+
+        return requests.get('/'.join([self.base_url,
+                                      self.version,
+                                      url.lstrip('/'),
+                                  ]),
+                            **kwargs)
 
     def get_projects(self):
         """Returns list of project ids known to the server."""
-        r = requests.get(self._mk_url('/projects'))
+        r = self.get('/projects')
         return r.json.get('projects', [])
 
     def get_resources(self, project_id, start_timestamp=None,
@@ -34,8 +50,8 @@ class Client(object):
         if end_timestamp:
             args['end_timestamp'] = end_timestamp.isoformat()
 
-        r = requests.get(self._mk_url('/projects/%s/resources' % project_id),
-                         params=args)
+        r = self.get('/projects/%s/resources' % project_id,
+                     params=args)
         if r.status_code == requests.codes.not_found:
             raise ValueError('Unknown project %r' % project_id)
         return r.json.get('resources', [])
@@ -49,8 +65,8 @@ class Client(object):
         if end_timestamp:
             args['end_timestamp'] = end_timestamp.isoformat()
 
-        r = requests.get(self._mk_url('/resources/%s/meters/%s' % (resource_id, meter)),
-                         params=args)
+        r = self.get('/resources/%s/meters/%s' % (resource_id, meter),
+                     params=args)
         if r.status_code == requests.codes.not_found:
             raise ValueError('Unknown resource %r' % resource_id)
         return r.json.get('events', [])
@@ -69,8 +85,8 @@ class Client(object):
         if end_timestamp:
             args['end_timestamp'] = end_timestamp.isoformat()
 
-        r = requests.get(self._mk_url('/resources/%s/meters/%s/duration' % (resource_id, meter)),
-                         params=args)
+        r = self.get('/resources/%s/meters/%s/duration' % (resource_id, meter),
+                     params=args)
         if r.status_code == requests.codes.not_found:
             raise ValueError('Unknown resource %r' % resource_id)
         return copy.copy(r.json)
@@ -87,10 +103,9 @@ class Client(object):
         if end_timestamp:
             args['end_timestamp'] = end_timestamp.isoformat()
 
-        r = requests.get(self._mk_url('/projects/%s/meters/%s/volume/%s' %
-                                     (project_id, meter, sum_or_max)
-                                     ),
-                        params=args)
+        r = self.get(('/projects/%s/meters/%s/volume/%s' %
+                      (project_id, meter, sum_or_max)),
+                     params=args)
         return r.json.get('volume')
 
     def get_project_volume_max(self, project_id, meter,
@@ -133,10 +148,9 @@ class Client(object):
         if end_timestamp:
             args['end_timestamp'] = end_timestamp.isoformat()
 
-        r = requests.get(self._mk_url('/resources/%s/meters/%s/volume/%s' %
-                                      (resource_id, meter, sum_or_max)
-                                      ),
-                         params=args)
+        r = self.get('/resources/%s/meters/%s/volume/%s' %
+                     (resource_id, meter, sum_or_max),
+                     params=args)
         return r.json.get('volume')
 
     def get_resource_volume_max(self, resource_id, meter,
