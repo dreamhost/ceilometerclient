@@ -35,13 +35,13 @@ def dump_resources(ceilometer, dumper):
                 if meter.startswith('instance:'):
                     type_ = 'instance'
                     flavor = meter.partition(':')[-1]
-                elif meter == 'volume_size':
+                elif meter == 'volume.size':
                     type_ = 'volume'
                     size = ceilometer.get_resource_volume_max(
                         resource_id=resource_id,
                         meter=meter,
                         )
-                elif meter == 'image_size':
+                elif meter == 'image.size':
                     type_ = 'image'
                 elif meter == 'network':
                     type_ = 'network'
