@@ -54,10 +54,9 @@ def dump_bandwidth(ceilometer, dumper, days):
                             )
 
                     # only write the row if we have data
-                    for valuetype in BANDWIDTH_VALUETYPES:
-                        if row_dict.get(valuetype) is not None:
-                            dumper.writerow(row_dict)
-                            break
+                    if any((row_dict.get(valuetype) is not None)
+                           for valuetype in BANDWIDTH_VALUETYPES):
+                        dumper.writerow(row_dict)
 
 def main():
     parser = argparse.ArgumentParser(
