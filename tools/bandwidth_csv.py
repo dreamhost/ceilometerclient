@@ -19,7 +19,11 @@ BANDWIDTH_FIELDS.extend(BANDWIDTH_VALUETYPES)
 
 
 def dump_bandwidth(ceilometer, dumper, days):
-    today = datetime.datetime.today()
+    today = datetime.datetime.today().replace(hour=0,
+                                              minute=0,
+                                              second=0,
+                                              microsecond=0,
+                                              )
 
     for project_id in ceilometer.get_projects():
         if project_id is None:
