@@ -19,7 +19,7 @@ BANDWIDTH_FIELDS.extend(BANDWIDTH_VALUETYPES)
 
 
 def dump_bandwidth(ceilometer, dumper, days):
-    today = datetime.date.today()
+    today = datetime.datetime.today()
 
     for project_id in ceilometer.get_projects():
         if project_id is None:
@@ -41,20 +41,13 @@ def dump_bandwidth(ceilometer, dumper, days):
 
                     # fill in values for the row
                     for valuetype in BANDWIDTH_VALUETYPES:
-                        # FIXME (sberler): we need to wrap this in a try
-                        # because if the meter does not exist in this
-                        # project (for the given time range) then it will
-                        # throw an exception
-                        try:
-                            meter = METER_FORMAT % (category, type_, valuetype)
-                            row_dict[valuetype] = ceilometer.get_project_volume_sum(
-                                project_id,
-                                meter,
-                                start_timestamp=start_timestamp,
-                                end_timestamp=end_timestamp,
-                                )
-                        except:
-                            pass
+                        meter = METER_FORMAT % (category, type_, valuetype)
+                        row_dict[valuetype] = ceilometer.get_project_volume_sum(
+                            project_id,
+                            meter,
+                            start_timestamp=start_timestamp,
+                            end_timestamp=end_timestamp,
+                            )
 
                     # only write the row if we have data
                     for valuetype in BANDWIDTH_VALUETYPES:
