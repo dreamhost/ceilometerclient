@@ -75,6 +75,50 @@ class Client(object):
             raise ValueError('Unknown resource %r' % resource_id)
         return copy.copy(r.json)
 
+    def _get_project_sum_or_max(self, sum_or_max, project_id, meter,
+            start_timestamp=None, end_timestamp=None, search_offset=0):
+        """Returns the total or max volume for the specified meter for a
+        project within the time range.
+        """
+        args = {'search_offset': search_offset,
+                }
+        if start_timestamp:
+            args['start_timestamp'] = start_timestamp.isoformat()
+        if end_timestamp:
+            args['end_timestamp'] = end_timestamp.isoformat()
+
+        r = requests.get(self._mk_url('/projects/%s/meters/%s/volume/%s' %
+                                     (project_id, meter, sum_or_max)
+                                     ),
+                        params=args)
+        return r.json.get('volume')
+
+    def get_project_volume_max(self, project_id, meter,
+            start_timestamp=None, end_timestamp=None, search_offset=0):
+        """Returns the max volume for the specified meter for a project
+        within the time range.
+        """
+        return self._get_project_sum_or_max('max',
+                                            project_id,
+                                            meter,
+                                            start_timestamp,
+                                            end_timestamp,
+                                            search_offset,
+                                            )
+
+    def get_project_volume_sum(self, project_id, meter,
+            start_timestamp=None, end_timestamp=None, search_offset=0):
+        """Returns the total volume for the specified meter for a project
+        within the time range.
+        """
+        return self._get_project_sum_or_max('sum',
+                                            project_id,
+                                            meter,
+                                            start_timestamp,
+                                            end_timestamp,
+                                            search_offset,
+                                            )
+
     def _get_resource_sum_or_max(self, sum_or_max, resource_id, meter,
             start_timestamp=None, end_timestamp=None,
             search_offset=0,
