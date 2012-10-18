@@ -8,7 +8,7 @@ setuptools.setup(
 
     description='Client for ceilometer metering API',
 
-    classifiers=['Development Status :: 3 - Alpha',
+    classifiers=['Development Status :: 2 - Pre-Alpha',
                  'License :: OSI Approved :: Apache Software License',
                  'Programming Language :: Python',
                  'Programming Language :: Python :: 2',
@@ -17,10 +17,11 @@ setuptools.setup(
                  #'Programming Language :: Python :: 3.2',
                  'Intended Audience :: Developers',
                  'Environment :: Web Environment',
+                 'Environment :: OpenStack',
                  ],
 
-    author='Doug Hellmann',
-    author_email='doug.hellmann@dreamhost.com',
+    author='DreamHost',
+    author_email='dev-community@dreamhost.com',
 
     url='https://github.com/dreamhost/ceilometerclient',
 
