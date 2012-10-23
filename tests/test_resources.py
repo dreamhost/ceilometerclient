@@ -7,13 +7,21 @@ import requests
 
 from ceilometerclient import client
 
+BASE_URL = u'http://localhost:9000'
 
 class ResourceTests(unittest.TestCase):
 
     def setUp(self):
-        self.c = client.Client('http://localhost:9000')
+        ksclient = mock.Mock()
+        ksclient.auth_token = "abc*token*abc"
+        ksclient.service_catalog = mock.Mock()
+        ksclient.service_catalog.get_endpoints = mock.Mock(
+            return_value={u'metering':
+                          [{u'adminURL': BASE_URL,
+                            u'region': u'RegionOne',
+                            u'id': u'8e88da8f3ca54ed8a1c4b56ccb39d2b6'}]})
+        self.c = client.Client(ksclient)
         self.response = mock.Mock()
-
 
     def test_get_resources(self):
         self.response.json = {'resources': ['resource1', 'resource2']}
@@ -21,7 +29,8 @@ class ResourceTests(unittest.TestCase):
             getter.return_value = self.response
             rsrces = self.c.get_resources('project-id')
             getter.assert_called_once_with(
-                'http://localhost:9000/v1/projects/project-id/resources',
+                '%s/v1/projects/project-id/resources' % BASE_URL,
+                headers={'X-Auth-Token': self.c.ksclient.auth_token},
                 params={},
                 )
         self.assertEquals(rsrces, ['resource1', 'resource2'])
@@ -43,7 +52,8 @@ class ResourceTests(unittest.TestCase):
             getter.return_value = self.response
             rsrces = self.c.get_resources('project-id', start_timestamp=d)
             getter.assert_called_once_with(
-                'http://localhost:9000/v1/projects/project-id/resources',
+                '%s/v1/projects/project-id/resources' % BASE_URL,
+                headers={'X-Auth-Token': self.c.ksclient.auth_token},
                 params={'start_timestamp': d.isoformat()},
                 )
         self.assertEquals(rsrces, ['resource1', 'resource2'])
@@ -56,9 +66,8 @@ class ResourceTests(unittest.TestCase):
             getter.return_value = self.response
             rsrces = self.c.get_resources('project-id', end_timestamp=d)
             getter.assert_called_once_with(
-                'http://localhost:9000/v1/projects/project-id/resources',
+                '%s/v1/projects/project-id/resources' % BASE_URL,
+                headers={'X-Auth-Token': self.c.ksclient.auth_token},
                 params={'end_timestamp': d.isoformat()},
                 )
         self.assertEquals(rsrces, ['resource1', 'resource2'])
-
-
