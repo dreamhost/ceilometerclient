@@ -3,9 +3,12 @@
 
 import argparse
 import csv
+import os
 import sys
+from urlparse import urlparse
 
 import ceilometerclient
+import keystoneclient.v2_0.client as ksclient
 
 
 RESOURCE_FIELDS = ['project_id', 'resource_id', 'name', 'display_name',
@@ -83,13 +86,38 @@ def dump_resources(ceilometer, dumper):
 def main():
     parser = argparse.ArgumentParser(
         description='Dump ceilometer data to a csv file.')
-    parser.add_argument('clienturl', metavar='URL', type=str,
-                        help='url for the ceilometer API endpoint')
+    parser.add_argument('--auth_url', metavar='URL',
+                        default=os.environ.get('OS_AUTH_URL',
+                                       'http://localhost:5000/v2.0'),
+                        type=str, help='Keystone Authentication URL')
+    parser.add_argument('--auth_username',
+                        default=os.environ.get('OS_USERNAME', None),
+                        type=str, help='Username for Keystone')
+    parser.add_argument('--auth_password', default=os.environ.get("OS_PASSWORD"),
+                        type=str, help='Password for Keystone')
+    parser.add_argument('--auth_tenant_name', default=os.environ.get("OS_TENANT_NAME"),
+                        type=str, help='Tenant name for Keystone')
+    parser.add_argument('--base-url', default='http://localhost:9000',
+                        type=str, help='Ceilometer URL')
+    parser.add_argument('--days', metavar='N', type=int, default=1,
+                        help='number of days to include in the csvt')
     parser.add_argument('filename', metavar='FILE', type=str,
                         help='name of the output csv file')
     args = parser.parse_args()
 
-    ceilometer = ceilometerclient.Client(args.clienturl)
+    if args.auth_username:
+        scheme = urlparse(args.auth_url).scheme
+        insecure = False if urlparse(args.auth_url).scheme == "https" else True
+
+        keystone = ksclient.Client(username=args.auth_username,
+                                   password=args.auth_password,
+                                   tenant_name=args.auth_tenant_name,
+                                   auth_url=args.auth_url,
+                                   insecure=insecure)
+        ceilometer = ceilometerclient.Client(keystone_client=keystone)
+    else:
+        ceilometer = ceilometerclient.Client(base_url=base_url)
+
     with open(args.filename, 'wb') as csvfile:
         dumper = csv.DictWriter(csvfile, RESOURCE_FIELDS)
         dumper.writeheader()
