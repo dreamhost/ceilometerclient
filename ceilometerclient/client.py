@@ -11,9 +11,12 @@ class Client(object):
     """
 
     def __init__(self, keystone_client=None,
-                 base_url="http://localhost:9000",
+                 base_url=None,
                  service_type="metering",
                  endpoint_type="adminURL"):
+        if not keystone_client and not base_url:
+            raise ValueError("Need to pass either keystone_client or base_url")
+
         self.keystone_client = keystone_client
         if keystone_client:
             base_url = keystone_client.service_catalog.get_endpoints(
