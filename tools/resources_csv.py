@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Tool for dumping ceilometer data to a csv file
 """
 
