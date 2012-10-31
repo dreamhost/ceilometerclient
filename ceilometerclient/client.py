@@ -10,14 +10,21 @@ class Client(object):
     """Ceilometer client.
     """
 
-    def __init__(self, ksclient,
+    def __init__(self, keystone_client=None,
+                 base_url=None,
                  service_type="metering",
                  endpoint_type="adminURL"):
-        self.ksclient = ksclient
-        base_url = ksclient.service_catalog.get_endpoints(
-            service_type=service_type,
-            endpoint_type=endpoint_type)
-        self.base_url = base_url[service_type][0][endpoint_type].rstrip("/")
+        if not keystone_client and not base_url:
+            raise ValueError("Need to pass either keystone_client or base_url")
+
+        self.keystone_client = keystone_client
+        if keystone_client:
+            base_url = keystone_client.service_catalog.get_endpoints(
+                service_type=service_type,
+                endpoint_type=endpoint_type)
+            self.base_url = base_url[service_type][0][endpoint_type].rstrip("/")
+        else:
+            self.base_url = base_url
         self.version = 'v1'
 
     def get(self, url, **kwargs):
@@ -25,10 +32,11 @@ class Client(object):
         headers.
 
         """
-        if 'headers' in kwargs:
-            kwargs['headers']['X-Auth-Token'] = self.ksclient.auth_token
-        else:
-            kwargs['headers'] = {'X-Auth-Token': self.ksclient.auth_token}
+        if self.keystone_client:
+            if 'headers' in kwargs:
+                kwargs['headers']['X-Auth-Token'] = self.keystone_client.auth_token
+            else:
+                kwargs['headers'] = {'X-Auth-Token': self.keystone_client.auth_token}
 
         return requests.get('/'.join([self.base_url,
                                       self.version,
