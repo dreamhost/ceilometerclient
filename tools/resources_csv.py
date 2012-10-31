@@ -97,7 +97,7 @@ def main():
                         type=str, help='Password for Keystone')
     parser.add_argument('--os-tenant_name', default=os.environ.get("OS_TENANT_NAME"),
                         type=str, help='Tenant name for Keystone')
-    parser.add_argument('--base-url', default='http://localhost:8000',
+    parser.add_argument('--base-url', default='http://localhost:8777',
                         type=str, help='Ceilometer URL')
     parser.add_argument('--days', metavar='N', type=int, default=1,
                         help='number of days to include in the csvt')
